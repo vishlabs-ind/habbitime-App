@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">Habitime: Screen Time Tracker</string>
+
+    <!-- Content Description !-->
+    <string name="floating_action_button">Floating Action Button</string>
+    <string name="not_found">Not Found</string>
+    <string name="menu_icon">Menu icon</string>
+    <string name="stats_perm_text">"This app needs Usage Access permission to track your app usage data. "Please go to Settings and enable it" "</string>
+    <string name="usage_access_required">Usage Access Required</string>
+    <string name="please_grant_usage_access_permission">Please grant Usage Access permission</string>
+    <string name="app_logo">app logo</string>
+    <string name="today_usage_icon">Today Usage Icon</string>
+    <string name="today_usage">Today Usage</string>
+
+    <string name="hour_indicator">h</string>
+    <string name="minute_indicator">m</string>
+    <string name="duration_picker_confirm_button">Confirm</string>
+
+</resources>

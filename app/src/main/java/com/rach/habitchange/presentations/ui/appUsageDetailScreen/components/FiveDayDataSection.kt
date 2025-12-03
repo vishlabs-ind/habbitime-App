@@ -2,7 +2,6 @@ package com.rach.habitchange.presentations.ui.appUsageDetailScreen.components
 
 import android.graphics.Color
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,7 +36,8 @@ import kotlin.math.ceil
 @Composable
 fun FiveDaysDataUiSection(
     modifier: Modifier = Modifier,
-    fiveDaysAppUsageData: List<LoadAppDataWithUsage>
+    fiveDaysAppUsageData: List<LoadAppDataWithUsage>,
+    todayUsage: Long
 ) {
     Column(
         modifier = modifier
@@ -73,7 +73,7 @@ fun FiveDaysDataUiSection(
         if (fiveDaysAppUsageData.isEmpty()) {
             Text("No Data Found", modifier = Modifier.align(Alignment.CenterHorizontally))
         } else {
-            UsageBarGraph(data = fiveDaysAppUsageData)
+            UsageBarGraph(data = fiveDaysAppUsageData, todayUsage)
             Spacer(Modifier.height(10.dp))
             fiveDaysAppUsageData.forEach { data ->
                 data.date?.let {
@@ -95,10 +95,9 @@ fun FiveDaysDataUiSection(
 @Composable
 fun UsageBarGraph(
     data: List<LoadAppDataWithUsage>,
-    modifier: Modifier = Modifier
+    todayUsage: Long
 ) {
     if (data.isEmpty()) return
-
     val maxMinutes = data.maxOf { it.todayUsageInMinutes }
     val maxHours = ceil(maxMinutes / 60f).toInt().coerceAtLeast(1)
 
@@ -106,7 +105,7 @@ fun UsageBarGraph(
     val barColor = androidx.compose.ui.graphics.Color(0xFF2196F3)
     val relativeLabels = data
 //        .asReversed()
-        .map { it.date ?: "" }
+        .map { it.date ?: "" } + "Today"
 
     val totalHeight = 200.dp
     val labelAreaHeight = 24.dp
@@ -118,7 +117,7 @@ fun UsageBarGraph(
     val step = graphHeightPx / maxHours
 
     Box(
-        modifier = modifier
+        modifier = Modifier
             .padding(10.dp)
             .height(totalHeight)
     ) {
@@ -170,11 +169,48 @@ fun UsageBarGraph(
                 modifier = Modifier.weight(1f),
                 verticalAlignment = Alignment.Bottom
             ) {
+                // Extra bar (example: Today)
+                val todayHeightRatio = (todayUsage / (maxHours * 60f)).coerceIn(0f, 1f)
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .padding(end = 15.dp)
+                ) {
+                    // BAR
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth(),
+                        contentAlignment = Alignment.BottomCenter
+                    ) {
+                        val todayBarHeight = graphAreaHeight * todayHeightRatio
+                        Canvas(
+                            modifier = Modifier
+                                .height(todayBarHeight)
+                                .width(barWidth)
+                        ) {
+                            drawRect(color = androidx.compose.ui.graphics.Color(0xFFFF5722)) // Orange
+                        }
+                    }
+
+                    // LABEL
+                    Box(
+                        modifier = Modifier
+                            .height(labelAreaHeight)
+                            .fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("Today", fontSize = 10.sp)
+                    }
+                }
+
                 data.forEachIndexed { index, item ->
                     val usage = item.todayUsageInMinutes
                     // Calculate ratio based on maxHours
                     val heightRatio = (usage / (maxHours * 60f)).coerceIn(0f, 1f)
-
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
@@ -217,6 +253,7 @@ fun UsageBarGraph(
                         }
                     }
                 }
+
             }
         }
     }

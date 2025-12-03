@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -61,10 +62,14 @@ fun TodayUsageTextAppDetailsScreen(
             )
 
             Button(
-                onClick = onSetLimitClick
+                onClick = onSetLimitClick,
+//                modifier = Modifier.size(30.dp)
             ) {
                 Text(
-                    text = "Set Limit"
+                    text = "Set Limit",
+                    style = poppinsBoldFont.copy(
+                        fontSize = 15.sp
+                    )
                 )
             }
         }

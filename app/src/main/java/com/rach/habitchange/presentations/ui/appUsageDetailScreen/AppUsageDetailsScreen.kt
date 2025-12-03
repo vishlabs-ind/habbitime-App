@@ -129,7 +129,8 @@ fun AppUsageDetailScreen(
                 Spacer(modifier = Modifier.height(dimensionResource(R.dimen.dimen_15dp)))
                 FiveDaysDataUiSection(
                     modifier = Modifier,
-                    fiveDaysAppUsageData = uiState.appsData
+                    fiveDaysAppUsageData = uiState.appsData,
+                    todayUsage
                 )
             }
             TimePickerDialog(

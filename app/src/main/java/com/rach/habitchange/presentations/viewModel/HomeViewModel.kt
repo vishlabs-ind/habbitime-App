@@ -58,7 +58,7 @@ class HomeViewModel @Inject constructor(
 
     fun fiveDayDataUsage(
         packageName: String,
-        days: Int = 5
+        days: Int = 6
     ) {
         loadAppDataForRange(
             packageName = packageName,

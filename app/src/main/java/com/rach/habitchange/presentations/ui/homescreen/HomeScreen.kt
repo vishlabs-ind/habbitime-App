@@ -6,8 +6,28 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
+import android.graphics.Paint
+
+import androidx.compose.ui.unit.sp
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.atan2
+import kotlin.math.hypot
+import android.graphics.Paint as AndroidPaint
+
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -25,6 +45,7 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -33,11 +54,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.rach.habitchange.R
+import com.rach.habitchange.presentations.model.LoadAppDataWithUsage
 import com.rach.habitchange.presentations.ui.NoDataFound
 import com.rach.habitchange.presentations.ui.homescreen.components.HomeAppItem
 import com.rach.habitchange.presentations.uiComponents.CustomTopAppBar
@@ -130,25 +154,152 @@ fun HomeScreen(
                 }
 
                 else -> {
-                    LazyColumn(
+                    Column(
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        items(uiState.appsData) {
-                            HomeAppItem(
-                                appName = it.name,
-                                packageName = it.packageName,
-                                rank = it.id,
-                                usageTime = minToHourMinute(it.todayUsageInMinutes),
-                                onClick = {
-                                    onAppClick(it.packageName, it.name, it.todayUsageInMinutes)
-                                }
-                            )
-                            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.dimen_12dp)))
+
+                        val totalApps = uiState.appsData.size
+
+                        if (totalApps > 4) {
+                            CircularGraph(uiState.appsData)
+
+                            Spacer(modifier = Modifier.height(16.dp))  // space between graph & list
+                        }
+
+                        LazyColumn(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            items(uiState.appsData) {
+                                HomeAppItem(
+                                    appName = it.name,
+                                    packageName = it.packageName,
+                                    rank = it.id,
+                                    usageTime = minToHourMinute(it.todayUsageInMinutes),
+                                    onClick = {
+                                        onAppClick(it.packageName, it.name, it.todayUsageInMinutes)
+                                    }
+                                )
+
+                                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.dimen_12dp)))
+                            }
                         }
                     }
                 }
+
             }
+        }}
+    }
+
+@Composable
+fun CircularGraph(appsData: List<LoadAppDataWithUsage>) {
+    if (appsData.isEmpty()) return
+
+    // Group < 30 min into Other
+    val mainApps = appsData.filter { it.todayUsageInMinutes >= 30 }
+    val otherApps = appsData.filter { it.todayUsageInMinutes < 30 }
+    val totalOthers = otherApps.sumOf { it.todayUsageInMinutes }
+
+    val finalList = buildList {
+        addAll(mainApps)
+        if (totalOthers > 0) {
+            add(
+                LoadAppDataWithUsage(
+                    id = -1,
+                    name = "Other",
+                    packageName = "",
+                    todayUsageInMinutes = totalOthers
+                )
+            )
         }
+    }
+
+    val totalUsage = finalList.sumOf { it.todayUsageInMinutes }
+
+    val colors = listOf(
+        Color(0xFF0091EA), Color(0xFFE53935), Color(0xFFFFB300),
+        Color(0xFF8E24AA), Color(0xFF43A047), Color(0xFFFB8C00)
+    )
+
+    val chartSize = 160.dp   // chart size (half size)
+    Row {
+        Spacer(Modifier.weight(1f))
+
+    Box(
+        modifier = Modifier
+            .padding(40.dp)
+            .size(chartSize)
+            .aspectRatio(1f), // perfect circle
+        contentAlignment = Alignment.Center
+    ) {
+
+        Canvas(modifier = Modifier.fillMaxSize()) {
+
+            val strokeWidth = 26f
+            val outerRadius = size.minDimension / 2
+            val innerRadius = outerRadius - strokeWidth * 1.1f
+
+            val labelRadius = outerRadius + 58f   // FIXED: adjusted for perfect equal distance
+
+            var startAngle = -90f
+
+            finalList.forEachIndexed { index, app ->
+
+                val sweep = (app.todayUsageInMinutes.toFloat() / totalUsage) * 360f
+
+                drawArc(
+                    color = colors[index % colors.size],
+                    startAngle = startAngle,
+                    sweepAngle = sweep,
+                    useCenter = false,
+                    style = Stroke(width = strokeWidth)
+                )
+
+                // Shorten name if long
+                val cleanName = if (app.name.length > 8)
+                    app.name.take(5) + "…"
+                else app.name
+
+                // Mid angle for label position
+                val midAngle = startAngle + sweep / 2
+                val rad = Math.toRadians(midAngle.toDouble())
+
+                val labelX = center.x + labelRadius * cos(rad).toFloat()
+                val labelY = center.y + labelRadius * sin(rad).toFloat()
+
+                // Text Paint
+                val textPaint = AndroidPaint().apply {
+                    color = android.graphics.Color.BLACK
+                    textSize = 22f
+                    textAlign = AndroidPaint.Align.CENTER
+                    isAntiAlias = true
+                }
+
+                // ⭐⭐ IMPORTANT FIX — baseline adjustment ⭐⭐
+                val textOffset = (textPaint.descent() + textPaint.ascent()) / 2
+
+                drawContext.canvas.nativeCanvas.drawText(
+                    cleanName,
+                    labelX,
+                    labelY - textOffset,   // <<< THIS FIXES UNEVEN LABEL SPACING
+                    textPaint
+                )
+
+                startAngle += sweep
+            }
+
+            // Center white donut
+            drawCircle(
+                color = Color.White,
+                radius = innerRadius
+            )
+        }
+
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("TODAY", color = Color.Gray, fontSize = 10.sp)
+            Text(minToHourMinute(totalUsage), color = Color.Black, fontSize = 14.sp)
+        }}
+        Spacer(Modifier.weight(1f))
+
     }
 }
 

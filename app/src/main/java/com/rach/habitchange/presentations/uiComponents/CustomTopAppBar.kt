@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -54,7 +55,7 @@ fun CustomTopAppBar(
             ) {
                 when (title) {
                     "Home" -> Icon(
-                        imageVector = Icons.Filled.Home,
+                        imageVector = Icons.Filled.Menu,
                         contentDescription = stringResource(R.string.menu_icon),
                         modifier = Modifier.size(dimensionResource(R.dimen.dimen_28dp))
                     )

@@ -33,15 +33,24 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -51,6 +60,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -65,6 +76,8 @@ import com.rach.habitchange.presentations.model.LoadAppDataWithUsage
 import com.rach.habitchange.presentations.ui.NoDataFound
 import com.rach.habitchange.presentations.ui.homescreen.components.HomeAppItem
 import com.rach.habitchange.presentations.uiComponents.CustomTopAppBar
+import com.rach.habitchange.presentations.uiComponents.DrawerContent
+import com.rach.habitchange.presentations.uiComponents.NavigationItem
 import com.rach.habitchange.presentations.uiComponents.PermissionDialog
 import com.rach.habitchange.presentations.viewModel.HomeViewModel
 import com.rach.habitchange.theme.onPrimaryContainerLight
@@ -117,26 +130,73 @@ fun HomeScreen(
             text = stringResource(R.string.stats_perm_text)
         )
     }
-    Scaffold(
-        topBar = {
-            CustomTopAppBar(
-                modifier = Modifier.fillMaxWidth(),
-                title = "Home"
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButtonUi(onFloatingButtonClicked, showPermissionDialog)
-        },
-        floatingActionButtonPosition = FabPosition.Center,
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
+    var selectedItem by remember { mutableStateOf("home") }
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+    val navigationItems = remember {
+        listOf(
+            NavigationItem("home", "Home", Icons.Default.Home),
+            NavigationItem("profile", "Profile", Icons.Default.Person),
+            NavigationItem("messages", "Messages", Icons.Default.Email),
+            NavigationItem("notifications", "Notifications", Icons.Default.Notifications),
+            NavigationItem("settings", "Settings", Icons.Default.Settings)
+        )
+    }
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet(
+                modifier = Modifier.width(280.dp)
+            ) {
+                DrawerContent(
+                    navigationItems = navigationItems,
+                    selectedItem = selectedItem,
+                    onItemClick = { itemId ->
+                        selectedItem = itemId
+                        scope.launch {
+                            drawerState.close()
+                        }
+                    }
+                )
+            }
         }
-    ) { paddingValues ->
-        Box(
-            modifier = modifier
-                .padding(paddingValues)
+    ) {
+        Scaffold(
+            topBar = {
+                CustomTopAppBar(
+                    modifier = Modifier.fillMaxWidth(),
+                    title = "Home",
+                    onNavigationIconClick = {
+                        scope.launch {
+                            if (drawerState.isOpen) {
+                                drawerState.close()
+                            } else {
+                                drawerState.open()
+                            }
+                        }
+                    }
+                )
+            },
+            floatingActionButton = {
+                FloatingActionButtonUi(onFloatingButtonClicked, showPermissionDialog)
+            },
+            floatingActionButtonPosition = FabPosition.Center,
+            snackbarHost = {
+                SnackbarHost(hostState = snackbarHostState)
+            }
+        ) { paddingValues ->
+            Box(
+                modifier = modifier
+                    .padding(paddingValues)
 
-        ) {
+            ) {
+
+                when {
+                    uiState.loading -> {
+                        CircularProgressIndicator(
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    }
 
             when {
                 uiState.loading -> {
@@ -301,9 +361,8 @@ fun CircularGraph(appsData: List<LoadAppDataWithUsage>) {
         Spacer(Modifier.weight(1f))
 
     }
+
 }
-
-
 fun minToHourMinute(min: Long): String {
     return when {
         min < 1 -> "0 min"

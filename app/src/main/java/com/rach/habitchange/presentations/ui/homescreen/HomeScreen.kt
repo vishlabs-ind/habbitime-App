@@ -33,10 +33,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DismissibleNavigationDrawer
 import androidx.compose.material3.DrawerValue
@@ -46,15 +52,18 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -69,10 +78,13 @@ import com.rach.habitchange.presentations.model.LoadAppDataWithUsage
 import com.rach.habitchange.presentations.ui.NoDataFound
 import com.rach.habitchange.presentations.ui.homescreen.components.HomeAppItem
 import com.rach.habitchange.presentations.uiComponents.CustomTopAppBar
+import com.rach.habitchange.presentations.uiComponents.DrawerContent
+import com.rach.habitchange.presentations.uiComponents.NavigationItem
 import com.rach.habitchange.presentations.uiComponents.PermissionDialog
 import com.rach.habitchange.presentations.uiComponents.SideNavigationBar
 import com.rach.habitchange.presentations.viewModel.HomeViewModel
 import com.rach.habitchange.theme.onPrimaryContainerLight
+import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(
@@ -122,66 +134,106 @@ fun HomeScreen(
             text = stringResource(R.string.stats_perm_text)
         )
     }
-    Scaffold(
-        topBar = {
-            CustomTopAppBar(
-                modifier = Modifier.fillMaxWidth(),
-                title = "Home"
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButtonUi(onFloatingButtonClicked, showPermissionDialog)
-        },
-        floatingActionButtonPosition = FabPosition.Center,
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
+    var selectedItem by remember { mutableStateOf("home") }
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+    val navigationItems = remember {
+        listOf(
+            NavigationItem("home", "Home", Icons.Default.Home),
+            NavigationItem("profile", "Profile", Icons.Default.Person),
+            NavigationItem("messages", "Messages", Icons.Default.Email),
+            NavigationItem("notifications", "Notifications", Icons.Default.Notifications),
+            NavigationItem("settings", "Settings", Icons.Default.Settings)
+        )
+    }
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet(
+                modifier = Modifier.width(280.dp)
+            ) {
+                DrawerContent(
+                    navigationItems = navigationItems,
+                    selectedItem = selectedItem,
+                    onItemClick = { itemId ->
+                        selectedItem = itemId
+                        scope.launch {
+                            drawerState.close()
+                        }
+                    }
+                )
+            }
         }
-    ) { paddingValues ->
-        Box(
-            modifier = modifier
-                .padding(paddingValues)
+    ) {
+        Scaffold(
+            topBar = {
+                CustomTopAppBar(
+                    modifier = Modifier.fillMaxWidth(),
+                    title = "Home",
+                    onNavigationIconClick = {
+                        scope.launch {
+                            if (drawerState.isOpen) {
+                                drawerState.close()
+                            } else {
+                                drawerState.open()
+                            }
+                        }
+                    }
+                )
+            },
+            floatingActionButton = {
+                FloatingActionButtonUi(onFloatingButtonClicked, showPermissionDialog)
+            },
+            floatingActionButtonPosition = FabPosition.Center,
+            snackbarHost = {
+                SnackbarHost(hostState = snackbarHostState)
+            }
+        ) { paddingValues ->
+            Box(
+                modifier = modifier
+                    .padding(paddingValues)
 
-        ) {
+            ) {
 
-            when {
-                uiState.loading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
+                when {
+                    uiState.loading -> {
+                        CircularProgressIndicator(
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    }
 
-                uiState.appsData.isEmpty() -> {
-                    NoDataFound(
-                        modifier = Modifier.fillMaxSize(),
-                        text = "No App Found ",
-                        text2 = "Please Add Apps"
-                    )
-                }
+                    uiState.appsData.isEmpty() -> {
+                        NoDataFound(
+                            modifier = Modifier.fillMaxSize(),
+                            text = "No App Found ",
+                            text2 = "Please Add Apps"
+                        )
+                    }
 
-                else -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        items(uiState.appsData) {
-                            HomeAppItem(
-                                appName = it.name,
-                                packageName = it.packageName,
-                                rank = it.id,
-                                usageTime = minToHourMinute(it.todayUsageInMinutes),
-                                onClick = {
-                                    onAppClick(it.packageName, it.name, it.todayUsageInMinutes)
-                                }
-                            )
-                            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.dimen_12dp)))
+                    else -> {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(uiState.appsData) {
+                                HomeAppItem(
+                                    appName = it.name,
+                                    packageName = it.packageName,
+                                    rank = it.id,
+                                    usageTime = minToHourMinute(it.todayUsageInMinutes),
+                                    onClick = {
+                                        onAppClick(it.packageName, it.name, it.todayUsageInMinutes)
+                                    }
+                                )
+                                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.dimen_12dp)))
+                            }
                         }
                     }
                 }
             }
         }
     }
+
 }
-
-
 fun minToHourMinute(min: Long): String {
     return when {
         min < 1 -> "0 min"

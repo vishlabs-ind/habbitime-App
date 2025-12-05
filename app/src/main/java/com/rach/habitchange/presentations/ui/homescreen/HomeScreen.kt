@@ -44,8 +44,6 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DismissibleNavigationDrawer
-import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -56,7 +54,7 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -81,10 +79,8 @@ import com.rach.habitchange.presentations.uiComponents.CustomTopAppBar
 import com.rach.habitchange.presentations.uiComponents.DrawerContent
 import com.rach.habitchange.presentations.uiComponents.NavigationItem
 import com.rach.habitchange.presentations.uiComponents.PermissionDialog
-import com.rach.habitchange.presentations.uiComponents.SideNavigationBar
 import com.rach.habitchange.presentations.viewModel.HomeViewModel
 import com.rach.habitchange.theme.onPrimaryContainerLight
-import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(
@@ -202,17 +198,36 @@ fun HomeScreen(
                         )
                     }
 
-                    uiState.appsData.isEmpty() -> {
-                        NoDataFound(
-                            modifier = Modifier.fillMaxSize(),
-                            text = "No App Found ",
-                            text2 = "Please Add Apps"
-                        )
-                    }
+            when {
+                uiState.loading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
 
-                    else -> {
+                uiState.appsData.isEmpty() -> {
+                    NoDataFound(
+                        modifier = Modifier.fillMaxSize(),
+                        text = "No App Found ",
+                        text2 = "Please Add Apps"
+                    )
+                }
+
+                else -> {
+                    Column(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+
+                        val totalApps = uiState.appsData.size
+
+                        if (totalApps > 4) {
+                            CircularGraph(uiState.appsData)
+
+                            Spacer(modifier = Modifier.height(16.dp))  // space between graph & list
+                        }
+
                         LazyColumn(
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             items(uiState.appsData) {
                                 HomeAppItem(
@@ -224,13 +239,127 @@ fun HomeScreen(
                                         onAppClick(it.packageName, it.name, it.todayUsageInMinutes)
                                     }
                                 )
+
                                 Spacer(modifier = Modifier.height(dimensionResource(R.dimen.dimen_12dp)))
                             }
                         }
                     }
                 }
+
             }
+        }}
+    }
+
+@Composable
+fun CircularGraph(appsData: List<LoadAppDataWithUsage>) {
+    if (appsData.isEmpty()) return
+
+    // Group < 30 min into Other
+    val mainApps = appsData.filter { it.todayUsageInMinutes >= 30 }
+    val otherApps = appsData.filter { it.todayUsageInMinutes < 30 }
+    val totalOthers = otherApps.sumOf { it.todayUsageInMinutes }
+
+    val finalList = buildList {
+        addAll(mainApps)
+        if (totalOthers > 0) {
+            add(
+                LoadAppDataWithUsage(
+                    id = -1,
+                    name = "Other",
+                    packageName = "",
+                    todayUsageInMinutes = totalOthers
+                )
+            )
         }
+    }
+
+    val totalUsage = finalList.sumOf { it.todayUsageInMinutes }
+
+    val colors = listOf(
+        Color(0xFF0091EA), Color(0xFFE53935), Color(0xFFFFB300),
+        Color(0xFF8E24AA), Color(0xFF43A047), Color(0xFFFB8C00)
+    )
+
+    val chartSize = 160.dp   // chart size (half size)
+    Row {
+        Spacer(Modifier.weight(1f))
+
+    Box(
+        modifier = Modifier
+            .padding(40.dp)
+            .size(chartSize)
+            .aspectRatio(1f), // perfect circle
+        contentAlignment = Alignment.Center
+    ) {
+
+        Canvas(modifier = Modifier.fillMaxSize()) {
+
+            val strokeWidth = 26f
+            val outerRadius = size.minDimension / 2
+            val innerRadius = outerRadius - strokeWidth * 1.1f
+
+            val labelRadius = outerRadius + 58f   // FIXED: adjusted for perfect equal distance
+
+            var startAngle = -90f
+
+            finalList.forEachIndexed { index, app ->
+
+                val sweep = (app.todayUsageInMinutes.toFloat() / totalUsage) * 360f
+
+                drawArc(
+                    color = colors[index % colors.size],
+                    startAngle = startAngle,
+                    sweepAngle = sweep,
+                    useCenter = false,
+                    style = Stroke(width = strokeWidth)
+                )
+
+                // Shorten name if long
+                val cleanName = if (app.name.length > 8)
+                    app.name.take(5) + "…"
+                else app.name
+
+                // Mid angle for label position
+                val midAngle = startAngle + sweep / 2
+                val rad = Math.toRadians(midAngle.toDouble())
+
+                val labelX = center.x + labelRadius * cos(rad).toFloat()
+                val labelY = center.y + labelRadius * sin(rad).toFloat()
+
+                // Text Paint
+                val textPaint = AndroidPaint().apply {
+                    color = android.graphics.Color.BLACK
+                    textSize = 22f
+                    textAlign = AndroidPaint.Align.CENTER
+                    isAntiAlias = true
+                }
+
+                // ⭐⭐ IMPORTANT FIX — baseline adjustment ⭐⭐
+                val textOffset = (textPaint.descent() + textPaint.ascent()) / 2
+
+                drawContext.canvas.nativeCanvas.drawText(
+                    cleanName,
+                    labelX,
+                    labelY - textOffset,   // <<< THIS FIXES UNEVEN LABEL SPACING
+                    textPaint
+                )
+
+                startAngle += sweep
+            }
+
+            // Center white donut
+            drawCircle(
+                color = Color.White,
+                radius = innerRadius
+            )
+        }
+
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("TODAY", color = Color.Gray, fontSize = 10.sp)
+            Text(minToHourMinute(totalUsage), color = Color.Black, fontSize = 14.sp)
+        }}
+        Spacer(Modifier.weight(1f))
+
     }
 
 }

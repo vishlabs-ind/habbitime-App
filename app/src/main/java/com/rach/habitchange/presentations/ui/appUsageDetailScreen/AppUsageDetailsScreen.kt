@@ -121,7 +121,7 @@ fun AppUsageDetailScreen(
                     modifier = Modifier.fillMaxWidth(),
                     todayUsage = todayUsage,
                     onSetLimitClick = {
-                        showTimerPicker = true
+                       showTimerPicker = true
                     }
                 )
 
@@ -133,11 +133,12 @@ fun AppUsageDetailScreen(
                     todayUsage
                 )
             }
-            TimePickerDialog(
-                showBottomSheet = showTimerPicker,
-                onDismissRequest = { showTimerPicker = false },
-                onConfirmRequest = { }
-            )
+
+//            TimePickerDialog(
+//                showBottomSheet = showTimerPicker,
+//                onDismissRequest = { showTimerPicker = false },
+//                onConfirmRequest = { }
+//            )
         }
     }
 

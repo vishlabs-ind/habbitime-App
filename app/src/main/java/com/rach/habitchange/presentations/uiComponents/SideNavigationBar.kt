@@ -55,10 +55,10 @@ fun SideNavigationBar() {
     val navigationItems = remember {
         listOf(
             NavigationItem("home", "Home", Icons.Default.Home),
-            NavigationItem("profile", "Profile", Icons.Default.Person),
-            NavigationItem("messages", "Messages", Icons.Default.Email),
-            NavigationItem("notifications", "Notifications", Icons.Default.Notifications),
-            NavigationItem("settings", "Settings", Icons.Default.Settings)
+            NavigationItem("share", "Share", Icons.Default.Share),
+            NavigationItem("rate us", "Rate Us", Icons.Default.Star),
+            NavigationItem("privacy policy", "privacy policy", Icons.Default.Lock),
+            NavigationItem("about us", "About Us", Icons.Default.Info)
         )
     }
     DrawerContent(
@@ -104,8 +104,8 @@ fun DrawerContent(
                 .background(
                     Brush.horizontalGradient(
                         colors = listOf(
-                            Color(0xFF6366F1),
-                            Color(0xFF8B5CF6)
+                            Color(0xFFE7E77F),
+                            Color(0x99F3CD5B)
                         )
                     )
                 )
@@ -121,23 +121,23 @@ fun DrawerContent(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "JD",
+                        text = "GK",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = Color.Black
                     )
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = "John Doe",
+                    text = "Gudiya Kumari",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = Color.Black
                 )
                 Text(
-                    text = "john.doe@example.com",
+                    text = "gudiyabx123@gmail.com",
                     fontSize = 14.sp,
-                    color = Color.White.copy(alpha = 0.9f)
+                    color = Color.Black.copy(alpha = 0.9f)
                 )
             }
         }

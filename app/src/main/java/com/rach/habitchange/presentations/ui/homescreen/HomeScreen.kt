@@ -40,9 +40,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DismissibleNavigationDrawer
 import androidx.compose.material3.DrawerValue
@@ -140,10 +144,10 @@ fun HomeScreen(
     val navigationItems = remember {
         listOf(
             NavigationItem("home", "Home", Icons.Default.Home),
-            NavigationItem("profile", "Profile", Icons.Default.Person),
-            NavigationItem("messages", "Messages", Icons.Default.Email),
-            NavigationItem("notifications", "Notifications", Icons.Default.Notifications),
-            NavigationItem("settings", "Settings", Icons.Default.Settings)
+            NavigationItem("share", "Share", Icons.Default.Share),
+            NavigationItem("rate us", "Rate Us", Icons.Default.Star),
+            NavigationItem("privacy policy", "privacy policy", Icons.Default.Lock),
+            NavigationItem("about us", "About Us", Icons.Default.Info)
         )
     }
     ModalNavigationDrawer(

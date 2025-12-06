@@ -16,7 +16,7 @@ android {
 
     defaultConfig {
         applicationId = "com.rach.habitchange"
-        minSdk = 26
+        minSdk = 24
         targetSdk = 35
         versionCode = 3
         versionName = "1.3"

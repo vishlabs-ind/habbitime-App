@@ -156,7 +156,12 @@ fun HomeScreen(
             ModalDrawerSheet(
                 modifier = Modifier.width(280.dp)
             ) {
-                DrawerContent(
+                SideNavigationBar(){
+                    scope.launch {
+                        drawerState.close()
+                    }
+                }
+               /* DrawerContent(
                     navigationItems = navigationItems,
                     selectedItem = selectedItem,
                     onItemClick = { itemId ->
@@ -165,7 +170,7 @@ fun HomeScreen(
                             drawerState.close()
                         }
                     }
-                )
+                )*/
             }
         }
     ) {

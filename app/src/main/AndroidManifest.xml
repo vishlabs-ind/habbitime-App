@@ -10,7 +10,6 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" /> <!-- Queries for specific apps -->
     <queries>
-
         <!-- Specific apps for habit tracking -->
         <package android:name="com.google.android.youtube" />
         <package android:name="com.android.chrome" />
@@ -19,14 +18,13 @@
         <package android:name="com.twitter.android" /> <!-- Twitter/X -->
         <!-- Add more packages as needed -->
 
-
         <!-- Query all launchable apps (optional, for broader visibility) -->
         <intent>
             <action android:name="android.intent.action.MAIN" />
-
             <category android:name="android.intent.category.LAUNCHER" />
         </intent>
     </queries>
+
 
     <application
         android:name=".daggerHilt.MyApp"
@@ -40,10 +38,6 @@
         android:theme="@style/Theme.AppSplashScreenStart"
         tools:targetApi="31">
         <activity
-            android:name=".presentations.ui.AboutUsActivity"
-            android:theme="@style/Theme.HabitChange"
-            android:exported="false" />
-        <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
@@ -53,10 +47,11 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity> <!-- - APP ID  = ca-app-pub-3940256099942544~3347511713 -->
+        </activity>
+        <!--- APP ID  = ca-app-pub-3940256099942544~3347511713 -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713" />
+            android:value= "ca-app-pub-3940256099942544~3347511713" />
     </application>
 
 </manifest>

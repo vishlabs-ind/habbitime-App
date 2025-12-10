@@ -7,5 +7,5 @@
         <item name="postSplashScreenTheme">@style/Theme.HabitChange</item>
 
     </style>
-    <style name="Theme.HabitChange" parent="android:Theme.Material.Light.NoActionBar"/>
+    <style name="Theme.HabitChange" parent="Theme.Material3.Light.NoActionBar"/>
 </resources>

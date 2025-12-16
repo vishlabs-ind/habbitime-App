@@ -211,7 +211,7 @@ fun AboutUsScreen(onBackClick: () -> Unit = {}) {
 
             ContactInfoItem(
                 icon = Icons.Default.Email,
-                text = "support@habitchange.com"
+                text = "statusb130@gmail.com"
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -225,7 +225,7 @@ fun AboutUsScreen(onBackClick: () -> Unit = {}) {
 
             // Version Info
             Text(
-                text = "Version 1.0.0",
+                text = "Version 1.5",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

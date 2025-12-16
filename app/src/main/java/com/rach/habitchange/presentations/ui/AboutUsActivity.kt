@@ -66,8 +66,6 @@ class AboutUsActivity : ComponentActivity() {
                 }
             }
         }
-
-
     }
 
 }

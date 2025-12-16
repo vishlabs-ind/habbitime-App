@@ -1,6 +1,8 @@
 package com.rach.habitchange.presentations.ui.appUsageDetailScreen
 
+import android.content.Intent
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -18,6 +20,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import android.provider.Settings
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.rach.habitchange.AppPreview
 import com.rach.habitchange.R
+import com.rach.habitchange.presentations.AccessibilityUtil
 import com.rach.habitchange.presentations.ui.appUsageDetailScreen.components.CircularRoundedImage
 import com.rach.habitchange.presentations.ui.appUsageDetailScreen.components.FiveDaysDataUiSection
 import com.rach.habitchange.presentations.ui.appUsageDetailScreen.components.TodayUsageTextAppDetailsScreen
@@ -38,12 +42,14 @@ import com.rach.habitchange.presentations.uiComponents.CustomTopAppBar
 import com.rach.habitchange.presentations.uiComponents.timeSelect.BaseDurationPicker
 import com.rach.habitchange.presentations.uiComponents.timeSelect.TimeUtil
 import com.rach.habitchange.presentations.viewModel.HomeViewModel
+import com.rach.habitchange.presentations.workmanager.roomsetup.vm.WorkerViewModel
+import com.rach.habitchange.presentations.workmanager.roomsetup.worker.CheckUsageWorker
 import com.rach.habitchange.theme.HabitChangeTheme
 
 
 private const val MinimumTime = (1 * 60) // 1min
 private const val MaximumTime = (22 * 60 * 60) + (45 * 60) // 22 hour 45 min max
-private const val currentTime = "2:30:00"
+private const val currentTime = "1:10:00"
 
 
 @Composable
@@ -52,13 +58,16 @@ fun AppUsageDetailScreen(
     packageName: String,
     appName: String,
     todayUsage: Long,
-    homeViewModel: HomeViewModel = hiltViewModel()
+    homeViewModel: HomeViewModel = hiltViewModel(),
+    workerViewModel: WorkerViewModel = hiltViewModel()
+
 ) {
 
     val scrollState = rememberScrollState()
     val context = LocalContext.current
 
     var showTimerPicker by remember { mutableStateOf(false) }
+    Log.d("Ui","entered on the screen")
 
     LaunchedEffect(Unit) {
         homeViewModel.fiveDayDataUsage(packageName)
@@ -110,6 +119,7 @@ fun AppUsageDetailScreen(
                     )
                 }
                 Spacer(modifier = Modifier.height(dimensionResource(R.dimen.dimen_8dp)))
+                Log.d("ui", "app name shown")
                 Text(
                     text = appName, // app Name
                     modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -136,8 +146,53 @@ fun AppUsageDetailScreen(
             TimePickerDialog(
                 showBottomSheet = showTimerPicker,
                 onDismissRequest = { showTimerPicker = false },
-                onConfirmRequest = { }
+
+                onConfirmRequest = { timeInSeconds: Long ->
+
+                    Log.d("UI", "User pressed confirm")
+
+                    val serviceName =
+                        "${context.packageName}/com.rach.habitchange.presentations.accessibility.AppUsageAccessibilityService"
+
+                    // 🔍 Check accessibility permission
+                    if (!AccessibilityUtil.isServiceEnabled(context, serviceName)) {
+
+                        Log.d("UI", "Accessibility not enabled")
+
+                        Toast.makeText(
+                            context,
+                            "Enable Accessibility permission to track app usage",
+                            Toast.LENGTH_LONG
+                        ).show()
+
+                        // 👉 Open accessibility settings
+                        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                        context.startActivity(intent)
+
+                        return@TimePickerDialog
+                    }
+
+                    // ✅ Permission granted → proceed
+                    Log.d("UI", "Accessibility enabled")
+
+                    workerViewModel.saveLimit(packageName, timeInSeconds)
+                    Log.d("UI", "Limit saved → $packageName = $timeInSeconds seconds")
+
+                    Toast.makeText(
+                        context,
+                        "Limit set successfully!",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    Log.d("UI", "Toast shown")
+
+
+
+                    showTimerPicker = false
+                    Log.d("UI", "Timer picker closed")
+                }
             )
+
+
         }
     }
 
@@ -149,7 +204,7 @@ fun TimePickerDialog(
     modifier: Modifier = Modifier,
     showBottomSheet: Boolean,
     onDismissRequest: () -> Unit,
-    onConfirmRequest: () -> Unit
+    onConfirmRequest: (Long) -> Unit
 ) {
 
     if (showBottomSheet) {
@@ -157,15 +212,16 @@ fun TimePickerDialog(
             modifier = modifier,
             onDismissRequest = onDismissRequest
         ) {
+            Log.d("UI", "Modal Bottom Sheet")
 
             BaseDurationPicker(
                 modifier = Modifier.fillMaxWidth(),
                 current = TimeUtil.convertTimeToDuration(currentTime),
                 minimumSeconds = MinimumTime,
                 maximumSeconds = MaximumTime,
-                onConfirmClick = { timeInStrings ->
+                onConfirmClick = { timeInStrings: String ->
                     val timeInSeconds = convertTimeStringToSeconds(timeInStrings)
-                    onConfirmRequest()
+                    onConfirmRequest(timeInSeconds)
                 }
             )
         }

@@ -82,6 +82,13 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.core.splashscreen)
 
+// WorkManager
+    implementation(libs.androidx.workmanager)
+
+// OPTIONAL WorkManager + Hilt injection
+    implementation(libs.androidx.hilt.work)
+    kapt(libs.androidx.hilt.compiler)
+
 }
 
 fun getSecretInfo(key:String):String{

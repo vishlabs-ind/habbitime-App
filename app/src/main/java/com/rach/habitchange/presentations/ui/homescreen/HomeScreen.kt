@@ -7,22 +7,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.mutableStateOf
-import android.graphics.Paint
-
-import androidx.compose.ui.unit.sp
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.atan2
-import kotlin.math.hypot
-import android.graphics.Paint as AndroidPaint
-
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -33,41 +17,62 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.rach.habitchange.R
 import com.rach.habitchange.presentations.model.LoadAppDataWithUsage
 import com.rach.habitchange.presentations.ui.NoDataFound
 import com.rach.habitchange.presentations.ui.homescreen.components.HomeAppItem
 import com.rach.habitchange.presentations.uiComponents.CustomTopAppBar
+import com.rach.habitchange.presentations.uiComponents.NavigationItem
 import com.rach.habitchange.presentations.uiComponents.PermissionDialog
+import com.rach.habitchange.presentations.uiComponents.SideNavigationBar
 import com.rach.habitchange.presentations.viewModel.HomeViewModel
 import com.rach.habitchange.theme.onPrimaryContainerLight
+import kotlinx.coroutines.launch
+import kotlin.math.cos
+import kotlin.math.sin
+import android.graphics.Paint as AndroidPaint
 
 @Composable
 fun HomeScreen(
@@ -117,90 +122,115 @@ fun HomeScreen(
             text = stringResource(R.string.stats_perm_text)
         )
     }
-    Scaffold(
-        topBar = {
-            CustomTopAppBar(
-                modifier = Modifier.fillMaxWidth(),
-                title = "Home"
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButtonUi(onFloatingButtonClicked, showPermissionDialog)
-        },
-        floatingActionButtonPosition = FabPosition.Center,
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
+    var selectedItem by remember { mutableStateOf("home") }
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+    val navigationItems = remember {
+        listOf(
+            NavigationItem("home", "Home", Icons.Default.Home),
+            NavigationItem("share", "Share", Icons.Default.Share),
+            NavigationItem("rate us", "Rate Us", Icons.Default.Star),
+            NavigationItem("privacy policy", "privacy policy", Icons.Default.Lock),
+            NavigationItem("about us", "About Us", Icons.Default.Info)
+        )
+    }
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet(
+                modifier = Modifier.width(280.dp)
+            ) {
+                SideNavigationBar() {
+                    scope.launch { drawerState.close() }
+                }
+            }
         }
-    ) { paddingValues ->
-        Box(
-            modifier = modifier
-                .padding(paddingValues)
+    ) {
+        Scaffold(
+            topBar = {
+                CustomTopAppBar(
+                    modifier = Modifier.fillMaxWidth(),
+                    title = "Home",
+                    onNavigationIconClick = {
+                        scope.launch {
+                            if (drawerState.isOpen) drawerState.close()
+                            else drawerState.open()
+                        }
+                    }
+                )
+            },
+            floatingActionButton = {
+                FloatingActionButtonUi(onFloatingButtonClicked, showPermissionDialog)
+            },
+            floatingActionButtonPosition = FabPosition.Center,
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+        ) { paddingValues ->
 
-        ) {
+            Box(
+                modifier = modifier.padding(paddingValues)
+            ) {
 
-            when {
-                uiState.loading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
+                when {
+                    uiState.loading -> {
+                        CircularProgressIndicator(
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    }
 
-                uiState.appsData.isEmpty() -> {
-                    NoDataFound(
-                        modifier = Modifier.fillMaxSize(),
-                        text = "No App Found ",
-                        text2 = "Please Add Apps"
-                    )
-                }
+                    uiState.appsData.isEmpty() -> {
+                        NoDataFound(
+                            modifier = Modifier.fillMaxSize(),
+                            text = "No App Found",
+                            text2 = "Please Add Apps"
+                        )
+                    }
 
-                else -> {
-//                    Column(
-//                        modifier = Modifier.fillMaxSize()
-//                    ) {
-
-//                        val totalApps = uiState.appsData.size
-//
-//                        if (totalApps > 4) {
-//                            CircularGraph(uiState.appsData)
-//
-//                            Spacer(modifier = Modifier.height(16.dp))  // space between graph & list
-//                        }
-
-                        LazyColumn(
-                            modifier = Modifier.fillMaxWidth()
+                    else -> {
+                        Column(
+                            modifier = Modifier.fillMaxSize()
                         ) {
+
                             val totalApps = uiState.appsData.size
 
                             if (totalApps > 4) {
-                                item {
-                                    Column {
-                                        CircularGraph(uiState.appsData)
-
-                                        Spacer(modifier = Modifier.height(16.dp))
-                                    }
-                                }
+                                CircularGraph(uiState.appsData)
+                                Spacer(modifier = Modifier.height(16.dp))
                             }
-                            items(uiState.appsData) {
-                                HomeAppItem(
-                                    appName = it.name,
-                                    packageName = it.packageName,
-                                    rank = it.id,
-                                    usageTime = minToHourMinute(it.todayUsageInMinutes),
-                                    onClick = {
-                                        onAppClick(it.packageName, it.name, it.todayUsageInMinutes)
-                                    }
-                                )
 
-                                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.dimen_12dp)))
+                            LazyColumn(
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                items(uiState.appsData) {
+                                    HomeAppItem(
+                                        appName = it.name,
+                                        packageName = it.packageName,
+                                        rank = it.id,
+                                        usageTime = minToHourMinute(it.todayUsageInMinutes),
+                                        onClick = {
+                                            onAppClick(
+                                                it.packageName,
+                                                it.name,
+                                                it.todayUsageInMinutes
+                                            )
+                                        }
+                                    )
+                                    Spacer(
+                                        modifier = Modifier.height(
+                                            dimensionResource(R.dimen.dimen_12dp)
+                                        )
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
-        }}
+        }
+    }
+}
 
 
-@Composable
+    @Composable
 fun CircularGraph(appsData: List<LoadAppDataWithUsage>) {
     if (appsData.isEmpty()) return
 
@@ -234,85 +264,87 @@ fun CircularGraph(appsData: List<LoadAppDataWithUsage>) {
     Row {
         Spacer(Modifier.weight(1f))
 
-    Box(
-        modifier = Modifier
-            .padding(40.dp)
-            .size(chartSize)
-            .aspectRatio(1f), // perfect circle
-        contentAlignment = Alignment.Center
-    ) {
+        Box(
+            modifier = Modifier
+                .padding(40.dp)
+                .size(chartSize)
+                .aspectRatio(1f), // perfect circle
+            contentAlignment = Alignment.Center
+        ) {
 
-        Canvas(modifier = Modifier.fillMaxSize()) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
 
-            val strokeWidth = 26f
-            val outerRadius = size.minDimension / 2
-            val innerRadius = outerRadius - strokeWidth * 1.1f
+                val strokeWidth = 26f
+                val outerRadius = size.minDimension / 2
+                val innerRadius = outerRadius - strokeWidth * 1.1f
 
-            val labelRadius = outerRadius + 58f   // FIXED: adjusted for perfect equal distance
+                val labelRadius =
+                    outerRadius + 58f   // FIXED: adjusted for perfect equal distance
 
-            var startAngle = -90f
+                var startAngle = -90f
 
-            finalList.forEachIndexed { index, app ->
+                finalList.forEachIndexed { index, app ->
 
-                val sweep = (app.todayUsageInMinutes.toFloat() / totalUsage) * 360f
+                    val sweep = (app.todayUsageInMinutes.toFloat() / totalUsage) * 360f
 
-                drawArc(
-                    color = colors[index % colors.size],
-                    startAngle = startAngle,
-                    sweepAngle = sweep,
-                    useCenter = false,
-                    style = Stroke(width = strokeWidth)
-                )
+                    drawArc(
+                        color = colors[index % colors.size],
+                        startAngle = startAngle,
+                        sweepAngle = sweep,
+                        useCenter = false,
+                        style = Stroke(width = strokeWidth)
+                    )
 
-                // Shorten name if long
-                val cleanName = if (app.name.length > 8)
-                    app.name.take(5) + "…"
-                else app.name
+                    // Shorten name if long
+                    val cleanName = if (app.name.length > 8)
+                        app.name.take(5) + "…"
+                    else app.name
 
-                // Mid angle for label position
-                val midAngle = startAngle + sweep / 2
-                val rad = Math.toRadians(midAngle.toDouble())
+                    // Mid angle for label position
+                    val midAngle = startAngle + sweep / 2
+                    val rad = Math.toRadians(midAngle.toDouble())
 
-                val labelX = center.x + labelRadius * cos(rad).toFloat()
-                val labelY = center.y + labelRadius * sin(rad).toFloat()
+                    val labelX = center.x + labelRadius * cos(rad).toFloat()
+                    val labelY = center.y + labelRadius * sin(rad).toFloat()
 
-                // Text Paint
-                val textPaint = AndroidPaint().apply {
-                    color = android.graphics.Color.BLACK
-                    textSize = 22f
-                    textAlign = AndroidPaint.Align.CENTER
-                    isAntiAlias = true
+                    // Text Paint
+                    val textPaint = AndroidPaint().apply {
+                        color = android.graphics.Color.BLACK
+                        textSize = 22f
+                        textAlign = AndroidPaint.Align.CENTER
+                        isAntiAlias = true
+                    }
+
+                    // ⭐⭐ IMPORTANT FIX — baseline adjustment ⭐⭐
+                    val textOffset = (textPaint.descent() + textPaint.ascent()) / 2
+
+                    drawContext.canvas.nativeCanvas.drawText(
+                        cleanName,
+                        labelX,
+                        labelY - textOffset,   // <<< THIS FIXES UNEVEN LABEL SPACING
+                        textPaint
+                    )
+
+                    startAngle += sweep
                 }
 
-                // ⭐⭐ IMPORTANT FIX — baseline adjustment ⭐⭐
-                val textOffset = (textPaint.descent() + textPaint.ascent()) / 2
-
-                drawContext.canvas.nativeCanvas.drawText(
-                    cleanName,
-                    labelX,
-                    labelY - textOffset,   // <<< THIS FIXES UNEVEN LABEL SPACING
-                    textPaint
+                // Center white donut
+                drawCircle(
+                    color = Color.White,
+                    radius = innerRadius
                 )
-
-                startAngle += sweep
             }
 
-            // Center white donut
-            drawCircle(
-                color = Color.White,
-                radius = innerRadius
-            )
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("TODAY", color = Color.Gray, fontSize = 10.sp)
+                Text(minToHourMinute(totalUsage), color = Color.Black, fontSize = 14.sp)
+            }
         }
-
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("TODAY", color = Color.Gray, fontSize = 10.sp)
-            Text(minToHourMinute(totalUsage), color = Color.Black, fontSize = 14.sp)
-        }}
         Spacer(Modifier.weight(1f))
 
     }
-}
 
+}
 
 fun minToHourMinute(min: Long): String {
     return when {

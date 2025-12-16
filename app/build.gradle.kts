@@ -16,7 +16,7 @@ android {
 
     defaultConfig {
         applicationId = "com.rach.habitchange"
-        minSdk = 26
+        minSdk = 24
         targetSdk = 35
         versionCode = 4
         versionName = "1.4"
@@ -29,8 +29,9 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
-            proguardFiles(
+            isMinifyEnabled = true
+            isShrinkResources = true
+                proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
@@ -62,6 +63,9 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.ui.text.google.fonts)
     implementation(libs.play.services.ads.api)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+    implementation(libs.androidx.activity)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

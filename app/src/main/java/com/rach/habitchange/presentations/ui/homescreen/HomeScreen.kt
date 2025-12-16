@@ -154,21 +154,32 @@ fun HomeScreen(
                 }
 
                 else -> {
-                    Column(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
+//                    Column(
+//                        modifier = Modifier.fillMaxSize()
+//                    ) {
 
-                        val totalApps = uiState.appsData.size
-
-                        if (totalApps > 4) {
-                            CircularGraph(uiState.appsData)
-
-                            Spacer(modifier = Modifier.height(16.dp))  // space between graph & list
-                        }
+//                        val totalApps = uiState.appsData.size
+//
+//                        if (totalApps > 4) {
+//                            CircularGraph(uiState.appsData)
+//
+//                            Spacer(modifier = Modifier.height(16.dp))  // space between graph & list
+//                        }
 
                         LazyColumn(
                             modifier = Modifier.fillMaxWidth()
                         ) {
+                            val totalApps = uiState.appsData.size
+
+                            if (totalApps > 4) {
+                                item {
+                                    Column {
+                                        CircularGraph(uiState.appsData)
+
+                                        Spacer(modifier = Modifier.height(16.dp))
+                                    }
+                                }
+                            }
                             items(uiState.appsData) {
                                 HomeAppItem(
                                     appName = it.name,
@@ -185,10 +196,9 @@ fun HomeScreen(
                         }
                     }
                 }
-
             }
         }}
-    }
+
 
 @Composable
 fun CircularGraph(appsData: List<LoadAppDataWithUsage>) {

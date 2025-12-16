@@ -22,7 +22,19 @@ appcompat = "1.7.1"
 material = "1.13.0"
 activity = "1.10.1"
 
+workmanager = "2.9.0"
+hiltWork = "1.2.0"
+
+
 [libraries]
+
+# WorkManager core
+androidx-workmanager = { module = "androidx.work:work-runtime-ktx", version.ref = "workmanager" }
+
+# OPTIONAL WorkManager + Hilt support
+androidx-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hiltWork" }
+androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hiltWork" }
+
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }

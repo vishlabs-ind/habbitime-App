@@ -15,5 +15,6 @@
     <string name="hour_indicator">h</string>
     <string name="minute_indicator">m</string>
     <string name="duration_picker_confirm_button">Confirm</string>
+    <string name="accessibility_description">Monitors app usage for limits.</string>
 
 </resources>

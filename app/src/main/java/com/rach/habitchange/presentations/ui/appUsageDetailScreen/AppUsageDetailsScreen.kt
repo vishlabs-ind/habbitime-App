@@ -1,5 +1,6 @@
 package com.rach.habitchange.presentations.ui.appUsageDetailScreen
 
+import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.widget.Toast
@@ -21,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import android.provider.Settings
+import androidx.compose.foundation.clickable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,10 +33,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
+import androidx.core.app.NotificationManagerCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.rach.habitchange.AppPreview
 import com.rach.habitchange.R
 import com.rach.habitchange.presentations.AccessibilityUtil
+import com.rach.habitchange.presentations.navigation.Screens
 import com.rach.habitchange.presentations.ui.appUsageDetailScreen.components.CircularRoundedImage
 import com.rach.habitchange.presentations.ui.appUsageDetailScreen.components.FiveDaysDataUiSection
 import com.rach.habitchange.presentations.ui.appUsageDetailScreen.components.TodayUsageTextAppDetailsScreen
@@ -54,6 +59,8 @@ private const val currentTime = "1:10:00"
 
 @Composable
 fun AppUsageDetailScreen(
+    navController: NavController,
+
     onBackClick: () -> Unit,
     packageName: String,
     appName: String,
@@ -65,8 +72,8 @@ fun AppUsageDetailScreen(
 
     val scrollState = rememberScrollState()
     val context = LocalContext.current
-
-    var showTimerPicker by remember { mutableStateOf(false) }
+var diologuebox by remember { mutableStateOf(false) }
+var showTimerPicker by remember { mutableStateOf(false) }
     Log.d("Ui","entered on the screen")
 
     LaunchedEffect(Unit) {
@@ -151,6 +158,9 @@ fun AppUsageDetailScreen(
 
                     Log.d("UI", "User pressed confirm")
 
+
+
+
                     val serviceName =
                         "${context.packageName}/com.rach.habitchange.presentations.accessibility.AppUsageAccessibilityService"
 
@@ -165,9 +175,8 @@ fun AppUsageDetailScreen(
                             Toast.LENGTH_LONG
                         ).show()
 
-                        // 👉 Open accessibility settings
-                        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-                        context.startActivity(intent)
+                        diologuebox = true
+
 
                         return@TimePickerDialog
                     }
@@ -192,10 +201,78 @@ fun AppUsageDetailScreen(
                 }
             )
 
+            if (diologuebox) {
+                AccessibilityInfoDialog(
+                    onDismiss = {
+                        diologuebox = false
+                    },
+                    onDoneClick = {
+                        diologuebox = false
+                        context.startActivity(
+                            Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                        )
+                    }
+                )
+            }
+
+
 
         }
     }
 
+}
+
+@Composable
+fun AccessibilityInfoDialog(
+    onDismiss: () -> Unit,
+    onDoneClick: () -> Unit
+) {
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = "Enable Accessibility")
+        },
+        text = {
+            Column {
+                Text(
+                    text = "Steps to enable:",
+                    style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Text(
+                    text = "1. click on done button\n" +
+                            "2. Tap on Downloaded apps\n" +
+                            "3. Click on Habitime: Screen Time Tracker\n" +
+                            "4. Habitime: Screen Time Tracker: toggle On",
+                    style = androidx.compose.material3.MaterialTheme.typography.bodySmall
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = "Why this is needed:\n" +
+                            "Accessibility is required to track app usage time accurately and apply limits.",
+                    style = androidx.compose.material3.MaterialTheme.typography.labelSmall
+                )
+            }
+        },
+        confirmButton = {
+            Text(
+                text = "Go to Setting",
+                modifier = Modifier
+                    .padding(8.dp)
+                    .clickable {
+                        onDoneClick()
+                    }
+            )
+        }
+    )
+}
+
+fun isNotificationEnabled(context: Context): Boolean {
+    return NotificationManagerCompat.from(context).areNotificationsEnabled()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -235,15 +312,3 @@ private fun convertTimeStringToSeconds(timeString: String): Long {
 }
 
 
-@AppPreview
-@Composable
-private fun Preview() {
-    HabitChangeTheme {
-        AppUsageDetailScreen(
-            onBackClick = {},
-            packageName = "ji",
-            appName = "Telegram",
-            todayUsage = 1000
-        )
-    }
-}

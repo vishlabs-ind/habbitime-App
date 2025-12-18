@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.rach.habitchange.presentations.AccessibilityUtil
 
@@ -19,24 +20,23 @@ fun AccessibilityPermissionScreen(
     onPermissionEnabled: () -> Unit
 ) {
     val context = LocalContext.current
-    Log.d("PermissionUi","entered on the screen")
+
     val serviceName =
         "${context.packageName}/com.rach.habitchange.presentations.accessibility.AppUsageAccessibilityService"
 
     var isEnabled by remember {
-
         mutableStateOf(
             AccessibilityUtil.isServiceEnabled(context, serviceName)
         )
     }
-Log.d("PermissionUi","entered remember")
-    LaunchedEffect(Unit) {
-        isEnabled = AccessibilityUtil.isServiceEnabled(context, serviceName)
-    }
 
-    if (isEnabled) {
+    // Re-check when coming back from settings
+    LaunchedEffect(Unit) {
+        while (!isEnabled) {
+            isEnabled = AccessibilityUtil.isServiceEnabled(context, serviceName)
+            kotlinx.coroutines.delay(500)
+        }
         onPermissionEnabled()
-        return
     }
 
     Scaffold(
@@ -55,26 +55,28 @@ Log.d("PermissionUi","entered remember")
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                "To track usage limits correctly, you must enable Accessibility Monitoring.",
+                "To track app usage limits, please enable Accessibility Service.",
                 style = MaterialTheme.typography.bodyMedium
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
             Button(
+                modifier = Modifier.fillMaxWidth(),
                 onClick = {
-                    val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-                    context.startActivity(intent)
-                    Toast.makeText(
-                        context,
-                        "Find HabitChange → Enable Accessibility Service",
-                        Toast.LENGTH_LONG
-                    ).show()
-                },
-                modifier = Modifier.fillMaxWidth()
+                    context.startActivity(
+                        Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                    )
+                }
             ) {
                 Text("Enable Service")
             }
         }
     }
+}
+
+@Composable
+@Preview(showBackground = true)
+fun showseeting(){
+   AccessibilityPermissionScreen {  }
 }

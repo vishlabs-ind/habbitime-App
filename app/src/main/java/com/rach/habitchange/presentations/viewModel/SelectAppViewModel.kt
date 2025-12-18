@@ -93,7 +93,13 @@ class SelectAppViewModel @Inject constructor(
     }
 
     fun onItemClick(item: SelectedAppInfo) {
-        if (_uiState.value.isMultiSelectionModeEnabled) {
+        if (!uiState.value.isMultiSelectionModeEnabled) {
+            _uiState.value = _uiState.value.copy(
+                isMultiSelectionModeEnabled = true,
+                selectedItems = listOf(item)
+            )
+        }
+       else if (_uiState.value.isMultiSelectionModeEnabled) {
             val updatedSelectedItems = _uiState.value.selectedItems.toMutableList()
             if (updatedSelectedItems.contains(item)) {
                 updatedSelectedItems.remove(item)

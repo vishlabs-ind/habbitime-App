@@ -6,6 +6,9 @@ sealed class Screens(
     object SplashScreen : Screens("SplashScreen")
     object HomeScreen : Screens("HomeScreen")
     object SelectAppScreen : Screens("SelectAppScreen")
+    object AccessibilityPermissionScreen :
+        Screens("AccessibilityPermissionScreen")
+
     object AppUsageDetailScreen : Screens("AppUsageDetailScreen") {
         const val PATTERN = "AppUsageDetailScreen/{packageName}/{appName}/{todayUsage}"
 

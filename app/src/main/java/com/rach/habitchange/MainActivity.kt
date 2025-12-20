@@ -10,6 +10,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.rach.habitchange.permissions.NotiicationPermission
 import com.rach.habitchange.presentations.navigation.MyNav
 import com.rach.habitchange.theme.HabitChangeTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -25,7 +26,10 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MyNav()
+                    NotiicationPermission{
+                        MyNav()
+                    }
+
                 }
             }
 

@@ -81,13 +81,11 @@ override fun onAccessibilityEvent(event: AccessibilityEvent?) {
                 totalUsage,
                 limitInSec
             )
-
             accumulatedUsage = 0L
             startTime = now
 
         }
     }
-
     override fun onDestroy() {
         usageJob?.cancel()
         Log.d("A11yServiceUI", "Service Destroyed")

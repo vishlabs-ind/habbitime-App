@@ -61,17 +61,17 @@ fun TodayUsageTextAppDetailsScreen(
                 modifier = Modifier.padding(start = 5.dp)
             )
 
-//            Button(
-//                onClick = onSetLimitClick,
-////                modifier = Modifier.size(30.dp)
-//            ) {
-//                Text(
-//                    text = "Set Limit",
-//                    style = poppinsBoldFont.copy(
-//                        fontSize = 15.sp
-//                    )
-//                )
-//            }
+            Button(
+                onClick = onSetLimitClick,
+//                modifier = Modifier.size(30.dp)
+            ) {
+                Text(
+                    text = "Set Limit",
+                    style = poppinsBoldFont.copy(
+                        fontSize = 15.sp
+                    )
+                )
+            }
         }
     }
 }

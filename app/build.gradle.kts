@@ -18,8 +18,8 @@ android {
         applicationId = "com.rach.habitchange"
         minSdk = 24
         targetSdk = 35
-        versionCode = 5
-        versionName = "1.5"
+        versionCode = 6
+        versionName = "1.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         //buildConfigField("String","ADMOB_APP_ID","\"${getSecretInfo("ADMOB_APP_ID")}\"")

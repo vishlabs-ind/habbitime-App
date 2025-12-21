@@ -235,41 +235,54 @@ fun AccessibilityInfoDialog(
         text = {
             Column {
                 Text(
-                    text = "Steps to enable:",
+                    text = "Why this permission is needed:",
                     style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
                 )
 
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
-                    text = "1. click on done button\n" +
-                            "2. Tap on Downloaded apps\n" +
-                            "3. Click on Habitime: Screen Time Tracker\n" +
-                            "4. Habitime: Screen Time Tracker: toggle On",
+                    text =
+                        "Habitime uses Accessibility Service only to detect the currently active app " +
+                                "and calculate usage time.\n\n" +
+
+                                "We do not read messages, passwords, or personal data. " +
+                                "All data stays on your device.",
                     style = androidx.compose.material3.MaterialTheme.typography.bodySmall
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
-                    text = "Why this is needed:\n" +
-                            "Accessibility is required to track app usage time accurately and apply limits.",
-                    style = androidx.compose.material3.MaterialTheme.typography.labelSmall
+                    text = "Steps to enable:",
+                    style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text =
+                        "1. Tap Allow\n" +
+                                "2. Open Downloaded apps\n" +
+                                "3. Select Habitime: Screen Time Tracker\n" +
+                                "4. Toggle Accessibility ON",
+                    style = androidx.compose.material3.MaterialTheme.typography.bodySmall
                 )
             }
         },
         confirmButton = {
-            Text(
-                text = "Go to Setting",
-                modifier = Modifier
-                    .padding(8.dp)
-                    .clickable {
-                        onDoneClick()
-                    }
-            )
+            androidx.compose.material3.TextButton(onClick = onDoneClick) {
+                Text("Allow")
+            }
+        },
+        dismissButton = {
+            androidx.compose.material3.TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
         }
     )
 }
+
 
 fun isNotificationEnabled(context: Context): Boolean {
     return NotificationManagerCompat.from(context).areNotificationsEnabled()
